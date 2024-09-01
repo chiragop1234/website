@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CC Checker via Stripe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #1e1e2e;
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #292943;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #5c67ef;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4957e3;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    #skStatus {
+      color: #ff2d55;
+      text-align: center;
+    }
+
+    #liveList, #deadList, #unknownList {
+      list-style-type: none;
+    }
+
+    #liveSection h3 {
+      color: #4cdb64;
+    }
+
+    #deadSection h3 {
+      color: #ff2d55;
+    }
+
+    #unknownSection h3 {
+      color: #f5c542;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stripe SK & CC Checker</h1>
+    
+    <!-- SK Key Input Section -->
+    <div class="section">
+      <h2>Enter Stripe Secret Key</h2>
+      <input type="password" id="skKey" placeholder="Enter your Stripe SK Key">
+      <button id="validateSK">Validate SK Key</button>
+      <p id="skStatus"></p>
+    </div>
+    
+    <!-- Credit Card Input Section -->
+    <div class="section">
+      <h2>Enter Credit Card Data</h2>
+      <textarea id="ccInput" rows="10" placeholder="Enter credit cards, one per line. Format: number|expiry|cvc"></textarea>
+      <button id="checkCC">Check Credit Cards</button>
+    </div>
+    
+    <!-- Results Section -->
+    <div class="section">
+      <h2>Results</h2>
+      <div id="liveSection">
+        <h3>Live</h3>
+        <ul id="liveList"></ul>
+      </div>
+      <div id="deadSection">
+        <h3>Dead</h3>
+        <ul id="deadList"></ul>
+      </div>
+      <div id="unknownSection">
+        <h3>Unknown</h3>
+        <ul id="unknownList"></ul>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('validateSK').addEventListener('click', function() {
+      const skKey = document.getElementById('skKey').value;
+      
+      // Validate the Stripe Secret Key by pinging the Stripe API
+      fetch('https://api.stripe.com/v1/charges', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${skKey}`
+        }
+      }).then(response => {
+        if (response.ok) {
+          document.getElementById('skStatus').textContent = 'Stripe SK Key is Valid!';
+          document.getElementById('skStatus').style.color = '#4cdb64';
+        } else {
+          document.getElementById('skStatus').textContent = 'Invalid Stripe SK Key';
+          document.getElementById('skStatus').style.color = '#ff2d55';
+        }
+      }).catch(err => {
+        document.getElementById('skStatus').textContent = 'Error! Check your connection or SK Key.';
+        document.getElementById('skStatus').style.color = '#ff2d55';
+      });
+    });
+
+    document.getElementById('checkCC').addEventListener('click', function() {
+      const skKey = document.getElementById('skKey').value;
+      const ccData = document.getElementById('ccInput').value.split('\n');
+      
+      ccData.forEach(cc => {
+        const [number, exp, cvc] = cc.split('|');
+        const data = {
+          'card[number]': number,
+          'card[exp_month]': exp.split('/')[0],
+          'card[exp_year]': exp.split('/')[1],
+          'card[cvc]': cvc
+        };
+
+        fetch('https://api.stripe.com/v1/tokens', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${skKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams(data)
+        }).then(response => response.json())
+          .then(result => {
+            if (result.error) {
+              document.getElementById('deadList').innerHTML += `<li>${cc} - Dead</li>`;
+            } else if (result.id) {
+              document.getElementById('liveList').innerHTML += `<li>${cc} - Live</li>`;
+            } else {
+              document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
+            }
+          }).catch(err => {
+            document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
+          });
+      });
+    });
+  </script>
+</body>
+</html>
