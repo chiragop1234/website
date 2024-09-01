@@ -3,106 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CC Checker via Stripe</title>
+  <title>Modern Stripe SK & CC Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
     }
 
     body {
-      background-color: #1e1e2e;
+      background-color: #14141f;
       color: #f5f5f5;
-      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .container {
-      max-width: 800px;
-      margin: 50px auto;
-      padding: 20px;
-      background-color: #292943;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      background-color: #1f1f3d;
+      border-radius: 12px;
+      padding: 30px;
+      width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease-in-out;
     }
 
-    h1, h2 {
+    .container:hover {
+      transform: translateY(-10px);
+    }
+
+    h1 {
       text-align: center;
+      color: #e1e1ff;
+      font-size: 24px;
       margin-bottom: 20px;
     }
 
     input, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 15px;
       margin-bottom: 20px;
-      border-radius: 5px;
-      border: 1px solid #555;
-      background-color: #333;
-      color: #fff;
+      border-radius: 8px;
+      border: none;
+      background-color: #262645;
+      color: #f5f5f5;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      box-shadow: 0 0 10px #5c67ef;
     }
 
     button {
       width: 100%;
-      padding: 10px;
+      padding: 15px;
       background-color: #5c67ef;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       color: white;
       cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
     }
 
     button:hover {
       background-color: #4957e3;
     }
 
-    .section {
-      margin-bottom: 30px;
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #2a2a4e;
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      z-index: 1000;
     }
 
-    #skStatus {
-      color: #ff2d55;
+    .popup.show {
+      display: block;
+    }
+
+    .popup h3 {
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .results {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .results div {
+      width: 30%;
+      background-color: #202040;
+      padding: 10px;
+      border-radius: 8px;
       text-align: center;
     }
 
-    #liveList, #deadList, #unknownList {
-      list-style-type: none;
+    .results div h3 {
+      color: #fff;
+      margin-bottom: 10px;
+      font-size: 18px;
     }
 
-    #liveSection h3 {
-      color: #4cdb64;
+    .results div ul {
+      list-style: none;
+      padding-left: 0;
+      color: #fff;
     }
 
-    #deadSection h3 {
-      color: #ff2d55;
+    #liveSection {
+      background-color: #3ac569;
     }
 
-    #unknownSection h3 {
-      color: #f5c542;
+    #deadSection {
+      background-color: #ff4b5c;
+    }
+
+    #unknownSection {
+      background-color: #ff9f43;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Stripe SK & CC Checker</h1>
+    <h1>Modern Stripe SK & CC Checker</h1>
     
     <!-- SK Key Input Section -->
-    <div class="section">
-      <h2>Enter Stripe Secret Key</h2>
-      <input type="password" id="skKey" placeholder="Enter your Stripe SK Key">
-      <button id="validateSK">Validate SK Key</button>
-      <p id="skStatus"></p>
-    </div>
-    
+    <input type="password" id="skKey" placeholder="Enter your Stripe SK Key">
+    <button id="validateSK">Validate SK Key</button>
+    <p id="skStatus"></p>
+
     <!-- Credit Card Input Section -->
-    <div class="section">
-      <h2>Enter Credit Card Data</h2>
-      <textarea id="ccInput" rows="10" placeholder="Enter credit cards, one per line. Format: number|expiry|cvc"></textarea>
-      <button id="checkCC">Check Credit Cards</button>
-    </div>
-    
+    <textarea id="ccInput" rows="5" placeholder="Enter CC data (format: number|expiry_month|expiry_year|cvc)"></textarea>
+    <button id="checkCC">Check Credit Cards</button>
+
     <!-- Results Section -->
-    <div class="section">
-      <h2>Results</h2>
+    <div class="results">
       <div id="liveSection">
         <h3>Live</h3>
         <ul id="liveList"></ul>
@@ -117,10 +166,19 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Popup Modal -->
+  <div class="popup" id="popup">
+    <h3 id="popupMessage"></h3>
+    <button id="closePopup">Close</button>
+  </div>
+
   <script>
     document.getElementById('validateSK').addEventListener('click', function() {
       const skKey = document.getElementById('skKey').value;
+      
+      // Display a loading message in the popup
+      showPopup("Validating your Stripe SK Key...");
       
       // Validate the Stripe Secret Key by pinging the Stripe API
       fetch('https://api.stripe.com/v1/charges', {
@@ -132,13 +190,16 @@
         if (response.ok) {
           document.getElementById('skStatus').textContent = 'Stripe SK Key is Valid!';
           document.getElementById('skStatus').style.color = '#4cdb64';
+          showPopup("SK Key Validated Successfully!");
         } else {
           document.getElementById('skStatus').textContent = 'Invalid Stripe SK Key';
           document.getElementById('skStatus').style.color = '#ff2d55';
+          showPopup("Invalid Stripe SK Key");
         }
       }).catch(err => {
         document.getElementById('skStatus').textContent = 'Error! Check your connection or SK Key.';
         document.getElementById('skStatus').style.color = '#ff2d55';
+        showPopup("Error: Could not validate SK Key.");
       });
     });
 
@@ -147,13 +208,16 @@
       const ccData = document.getElementById('ccInput').value.split('\n');
       
       ccData.forEach(cc => {
-        const [number, exp, cvc] = cc.split('|');
+        const [number, exp_month, exp_year, cvc] = cc.split('|');
         const data = {
           'card[number]': number,
-          'card[exp_month]': exp.split('/')[0],
-          'card[exp_year]': exp.split('/')[1],
+          'card[exp_month]': exp_month,
+          'card[exp_year]': exp_year,
           'card[cvc]': cvc
         };
+
+        // Simulate an ongoing process
+        showPopup("Checking credit card: " + number);
 
         fetch('https://api.stripe.com/v1/tokens', {
           method: 'POST',
@@ -166,15 +230,31 @@
           .then(result => {
             if (result.error) {
               document.getElementById('deadList').innerHTML += `<li>${cc} - Dead</li>`;
+              showPopup("Card " + number + " is Dead.");
             } else if (result.id) {
               document.getElementById('liveList').innerHTML += `<li>${cc} - Live</li>`;
+              showPopup("Card " + number + " is Live!");
             } else {
               document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
+              showPopup("Card " + number + " is Unknown.");
             }
           }).catch(err => {
             document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
+            showPopup("Error checking card " + number + ".");
           });
       });
+    });
+
+    // Popup Handling
+    function showPopup(message) {
+      const popup = document.getElementById('popup');
+      document.getElementById('popupMessage').textContent = message;
+      popup.classList.add('show');
+    }
+
+    document.getElementById('closePopup').addEventListener('click', function() {
+      const popup = document.getElementById('popup');
+      popup.classList.remove('show');
     });
   </script>
 </body>
