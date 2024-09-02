@@ -180,6 +180,26 @@
             color: #fff;
             margin-bottom: 10px;
         }
+
+        .popup ul {
+            list-style: none;
+            padding: 0;
+            color: #fff;
+        }
+
+        .popup ul li {
+            margin-bottom: 5px;
+        }
+
+        .popup button {
+            background-color: #5c67ef;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -221,7 +241,8 @@
 
     <!-- Popup Modal -->
     <div class="popup" id="popup">
-        <h3 id="popupMessage"></h3>
+        <h3 id="popupTitle"></h3>
+        <ul id="ccList"></ul>
         <button id="closePopup">Close</button>
     </div>
 
@@ -229,24 +250,24 @@
         let useOwnerSk = false;
         const ownerSk = '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';
         let liveCount = 0, deadCount = 0, unknownCount = 0, totalCount = 0;
+        let liveCards = [], deadCards = [], unknownCards = [];
 
         const toggleSlider = document.getElementById('nonSkToggle');
         const skInput = document.getElementById('skKey');
         const validateBtn = document.getElementById('validateSK');
         const popup = document.getElementById('popup');
-        const popupMessage = document.getElementById('popupMessage');
+        const popupTitle = document.getElementById('popupTitle');
+        const ccList = document.getElementById('ccList');
 
         toggleSlider.addEventListener('click', () => {
             toggleSlider.classList.toggle('on');
             useOwnerSk = toggleSlider.classList.contains('on');
             skInput.disabled = useOwnerSk;
-            skInput.value = useOwnerSk ? '' : '';
+            skInput.value = '';
         });
 
         validateBtn.addEventListener('click', () => {
             const skKey = useOwnerSk ? ownerSk : skInput.value;
-
-            showPopup("Validating SK Key...");
 
             fetch('https://api.stripe.com/v1/charges', {
                 method: 'GET',
@@ -271,10 +292,13 @@
             const ccData = document.getElementById('ccInput').value.split('\n');
             totalCount = ccData.length;
 
-            // Reset counts
+            // Reset counts and lists
             liveCount = 0;
             deadCount = 0;
             unknownCount = 0;
+            liveCards = [];
+            deadCards = [];
+            unknownCards = [];
 
             ccData.forEach(card => {
                 checkCard(card.trim());
@@ -291,14 +315,17 @@
             const expiryYear = cardParts[2];
             const cvc = cardParts[3];
 
-            // Here you would make a request to the Stripe API to check the card, but for demonstration:
-            const isLive = Math.random() > 0.5; // Simulate check result
+            // Simulate check result (Replace this logic with actual Stripe API call)
+            const isLive = Math.random() > 0.5;
 
             if (isLive) {
                 liveCount++;
+                liveCards.push(card);
             } else {
                 deadCount++;
+                deadCards.push(card);
             }
+
             updateCounts();
         }
 
@@ -310,6 +337,29 @@
 
         function showPopup(message) {
             popupMessage.textContent = message;
+            popup.classList.add('show');
+        }
+
+        document.getElementById('liveSection').addEventListener('click', () => {
+            displayCards("Live Cards", liveCards);
+        });
+
+        document.getElementById('deadSection').addEventListener('click', () => {
+            displayCards("Dead Cards", deadCards);
+        });
+
+        document.getElementById('unknownSection').addEventListener('click', () => {
+            displayCards("Unknown Cards", unknownCards);
+        });
+
+        function displayCards(title, cards) {
+            popupTitle.textContent = title;
+            ccList.innerHTML = '';
+            cards.forEach(card => {
+                const listItem = document.createElement('li');
+                listItem.textContent = card;
+                ccList.appendChild(listItem);
+            });
             popup.classList.add('show');
         }
 
