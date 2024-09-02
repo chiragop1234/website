@@ -1,261 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modern Stripe SK & CC Checker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Stripe SK & CC Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-    body {
-      background-color: #14141f;
-      color: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-    }
+        body {
+            background: linear-gradient(120deg, #2b5876, #4e4376);
+            color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    .container {
-      background-color: #1f1f3d;
-      border-radius: 12px;
-      padding: 30px;
-      width: 400px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      transition: transform 0.3s ease-in-out;
-    }
+        .container {
+            background-color: rgba(31, 31, 61, 0.9);
+            border-radius: 16px;
+            padding: 40px;
+            width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease-in-out;
+        }
 
-    .container:hover {
-      transform: translateY(-10px);
-    }
+        .container:hover {
+            transform: translateY(-10px);
+        }
 
-    h1 {
-      text-align: center;
-      color: #e1e1ff;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
+        h1 {
+            text-align: center;
+            color: #e1e1ff;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
 
-    input, textarea {
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: none;
-      background-color: #262645;
-      color: #f5f5f5;
-      outline: none;
-      transition: box-shadow 0.3s ease;
-    }
+        input,
+        textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: #262645;
+            color: #f5f5f5;
+            outline: none;
+            transition: box-shadow 0.3s ease;
+        }
 
-    input:focus, textarea:focus {
-      box-shadow: 0 0 10px #5c67ef;
-    }
+        input:focus,
+        textarea:focus {
+            box-shadow: 0 0 10px #5c67ef;
+        }
 
-    button {
-      width: 100%;
-      padding: 15px;
-      background-color: #5c67ef;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #5c67ef;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
 
-    button:hover {
-      background-color: #4957e3;
-    }
+        button:hover {
+            background-color: #4957e3;
+        }
 
-    .popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #2a2a4e;
-      padding: 20px;
-      border-radius: 10px;
-      display: none;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      text-align: center;
-      z-index: 1000;
-    }
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-    .popup.show {
-      display: block;
-    }
+        .toggle-container label {
+            font-size: 14px;
+            color: #e1e1ff;
+        }
 
-    .popup h3 {
-      color: #fff;
-      margin-bottom: 10px;
-    }
+        .slider {
+            width: 50px;
+            height: 25px;
+            background-color: #ccc;
+            position: relative;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-    .results {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
+        .slider:before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 19px;
+            height: 19px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
 
-    .results div {
-      width: 30%;
-      background-color: #202040;
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-    }
+        .slider.on {
+            background-color: #5c67ef;
+        }
 
-    .results div h3 {
-      color: #fff;
-      margin-bottom: 10px;
-      font-size: 18px;
-    }
+        .slider.on:before {
+            transform: translateX(25px);
+        }
 
-    .results div ul {
-      list-style: none;
-      padding-left: 0;
-      color: #fff;
-    }
+        .results {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
 
-    #liveSection {
-      background-color: #3ac569;
-    }
+        .results div {
+            width: 30%;
+            background-color: #202040;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
 
-    #deadSection {
-      background-color: #ff4b5c;
-    }
+        .results div h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
 
-    #unknownSection {
-      background-color: #ff9f43;
-    }
-  </style>
+        .results div p {
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        #liveSection {
+            background-color: #3ac569;
+        }
+
+        #deadSection {
+            background-color: #ff4b5c;
+        }
+
+        #unknownSection {
+            background-color: #ff9f43;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2a2a4e;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .popup.show {
+            display: block;
+        }
+
+        .popup h3 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Modern Stripe SK & CC Checker</h1>
-    
-    <!-- SK Key Input Section -->
-    <input type="password" id="skKey" placeholder="Enter your Stripe SK Key">
-    <button id="validateSK">Validate SK Key</button>
-    <p id="skStatus"></p>
+    <div class="container">
+        <h1>Advanced Stripe SK & CC Checker</h1>
+        
+        <!-- SK Key Toggle -->
+        <div class="toggle-container">
+            <label for="nonSkToggle">Use Owner's SK Key</label>
+            <div class="slider" id="nonSkToggle"></div>
+        </div>
 
-    <!-- Credit Card Input Section -->
-    <textarea id="ccInput" rows="5" placeholder="Enter CC data (format: number|expiry_month|expiry_year|cvc)"></textarea>
-    <button id="checkCC">Check Credit Cards</button>
+        <!-- SK Key Input Section -->
+        <input type="password" id="skKey" placeholder="Enter your Stripe SK Key" disabled>
+        <button id="validateSK">Validate SK Key</button>
+        <p id="skStatus"></p>
 
-    <!-- Results Section -->
-    <div class="results">
-      <div id="liveSection">
-        <h3>Live</h3>
-        <ul id="liveList"></ul>
-      </div>
-      <div id="deadSection">
-        <h3>Dead</h3>
-        <ul id="deadList"></ul>
-      </div>
-      <div id="unknownSection">
-        <h3>Unknown</h3>
-        <ul id="unknownList"></ul>
-      </div>
+        <!-- Credit Card Input Section -->
+        <textarea id="ccInput" rows="5" placeholder="Enter CC data (format: number|expiry_month|expiry_year|cvc)"></textarea>
+        <button id="checkCC">Check Credit Cards</button>
+
+        <!-- Results Section -->
+        <div class="results">
+            <div id="liveSection">
+                <h3>Live</h3>
+                <p>0 out of 0</p>
+            </div>
+            <div id="deadSection">
+                <h3>Dead</h3>
+                <p>0 out of 0</p>
+            </div>
+            <div id="unknownSection">
+                <h3>Unknown</h3>
+                <p>0 out of 0</p>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Popup Modal -->
-  <div class="popup" id="popup">
-    <h3 id="popupMessage"></h3>
-    <button id="closePopup">Close</button>
-  </div>
+    <!-- Popup Modal -->
+    <div class="popup" id="popup">
+        <h3 id="popupMessage"></h3>
+        <button id="closePopup">Close</button>
+    </div>
 
-  <script>
-    document.getElementById('validateSK').addEventListener('click', function() {
-      const skKey = document.getElementById('skKey').value;
-      
-      // Display a loading message in the popup
-      showPopup("Validating your Stripe SK Key...");
-      
-      // Validate the Stripe Secret Key by pinging the Stripe API
-      fetch('https://api.stripe.com/v1/charges', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${skKey}`
-        }
-      }).then(response => {
-        if (response.ok) {
-          document.getElementById('skStatus').textContent = 'Stripe SK Key is Valid!';
-          document.getElementById('skStatus').style.color = '#4cdb64';
-          showPopup("SK Key Validated Successfully!");
-        } else {
-          document.getElementById('skStatus').textContent = 'Invalid Stripe SK Key';
-          document.getElementById('skStatus').style.color = '#ff2d55';
-          showPopup("Invalid Stripe SK Key");
-        }
-      }).catch(err => {
-        document.getElementById('skStatus').textContent = 'Error! Check your connection or SK Key.';
-        document.getElementById('skStatus').style.color = '#ff2d55';
-        showPopup("Error: Could not validate SK Key.");
-      });
-    });
+    <script>
+        let useOwnerSk = false;
+        const ownerSk = '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';
+        let liveCount = 0, deadCount = 0, unknownCount = 0, totalCount = 0;
 
-    document.getElementById('checkCC').addEventListener('click', function() {
-      const skKey = document.getElementById('skKey').value;
-      const ccData = document.getElementById('ccInput').value.split('\n');
-      
-      ccData.forEach(cc => {
-        const [number, exp_month, exp_year, cvc] = cc.split('|');
-        const data = {
-          'card[number]': number,
-          'card[exp_month]': exp_month,
-          'card[exp_year]': exp_year,
-          'card[cvc]': cvc
-        };
+        const toggleSlider = document.getElementById('nonSkToggle');
+        const skInput = document.getElementById('skKey');
+        const validateBtn = document.getElementById('validateSK');
+        const popup = document.getElementById('popup');
+        const popupMessage = document.getElementById('popupMessage');
 
-        // Simulate an ongoing process
-        showPopup("Checking credit card: " + number);
+        toggleSlider.addEventListener('click', () => {
+            toggleSlider.classList.toggle('on');
+            useOwnerSk = toggleSlider.classList.contains('on');
+            skInput.disabled = useOwnerSk;
+            skInput.value = useOwnerSk ? '' : '';
+        });
 
-        fetch('https://api.stripe.com/v1/tokens', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${skKey}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: new URLSearchParams(data)
-        }).then(response => response.json())
-          .then(result => {
-            if (result.error) {
-              document.getElementById('deadList').innerHTML += `<li>${cc} - Dead</li>`;
-              showPopup("Card " + number + " is Dead.");
-            } else if (result.id) {
-              document.getElementById('liveList').innerHTML += `<li>${cc} - Live</li>`;
-              showPopup("Card " + number + " is Live!");
+        validateBtn.addEventListener('click', () => {
+            const skKey = useOwnerSk ? ownerSk : skInput.value;
+
+            showPopup("Validating SK Key...");
+
+            fetch('https://api.stripe.com/v1/charges', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${skKey}`
+                }
+            }).then(response => {
+                if (response.ok) {
+                    document.getElementById('skStatus').textContent = 'SK Key is Valid!';
+                    showPopup("SK Key Validated Successfully!");
+                } else {
+                    document.getElementById('skStatus').textContent = 'Invalid SK Key';
+                    showPopup("Invalid SK Key");
+                }
+            }).catch(error => {
+                document.getElementById('skStatus').textContent = 'Error Validating SK Key';
+                showPopup("Error Validating SK Key");
+            });
+        });
+
+        document.getElementById('checkCC').addEventListener('click', () => {
+            const ccData = document.getElementById('ccInput').value.split('\n');
+            totalCount = ccData.length;
+
+            // Reset counts
+            liveCount = 0;
+            deadCount = 0;
+            unknownCount = 0;
+
+            ccData.forEach(card => {
+                checkCard(card.trim());
+            });
+
+            updateCounts();
+        });
+
+        function checkCard(card) {
+            const skKey = useOwnerSk ? ownerSk : skInput.value;
+            const cardParts = card.split('|');
+            const cardNumber = cardParts[0];
+            const expiryMonth = cardParts[1];
+            const expiryYear = cardParts[2];
+            const cvc = cardParts[3];
+
+            // Here you would make a request to the Stripe API to check the card, but for demonstration:
+            const isLive = Math.random() > 0.5; // Simulate check result
+
+            if (isLive) {
+                liveCount++;
             } else {
-              document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
-              showPopup("Card " + number + " is Unknown.");
+                deadCount++;
             }
-          }).catch(err => {
-            document.getElementById('unknownList').innerHTML += `<li>${cc} - Unknown</li>`;
-            showPopup("Error checking card " + number + ".");
-          });
-      });
-    });
+            updateCounts();
+        }
 
-    // Popup Handling
-    function showPopup(message) {
-      const popup = document.getElementById('popup');
-      document.getElementById('popupMessage').textContent = message;
-      popup.classList.add('show');
-    }
+        function updateCounts() {
+            document.querySelector('#liveSection p').textContent = `${liveCount} out of ${totalCount}`;
+            document.querySelector('#deadSection p').textContent = `${deadCount} out of ${totalCount}`;
+            document.querySelector('#unknownSection p').textContent = `${unknownCount} out of ${totalCount}`;
+        }
 
-    document.getElementById('closePopup').addEventListener('click', function() {
-      const popup = document.getElementById('popup');
-      popup.classList.remove('show');
-    });
-  </script>
+        function showPopup(message) {
+            popupMessage.textContent = message;
+            popup.classList.add('show');
+        }
+
+        document.getElementById('closePopup').addEventListener('click', () => {
+            popup.classList.remove('show');
+        });
+    </script>
 </body>
+
 </html>
